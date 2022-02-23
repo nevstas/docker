@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+    web:
+        image: nginx:latest
+        build:
+            context: ./
+            dockerfile: ./Dockerfile-web
+        ports:
+            - 80:80
+        volumes:
+            - ./:/var/www
+            - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        links:
+            - php
+
+    php:
+        image: php:8.1-fpm
+        build:
+            context: ./
+            dockerfile: ./Dockerfile-php
+        volumes:
+            - ./:/var/www
+
+    mariadb:
+        image: mariadb:10.7
+        volumes:
+            - ./mariadb:/var/lib/mysql
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: qwerty
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        links:
+            - mariadb:db
+        ports:
+            - 8765:80
+        environment:
+            MYSQL_ROOT_PASSWORD: qwerty
+        depends_on:
+            - mariadb
+
+    redis:
+        image: redis:alpine
+
+    rabbitmq:
+        image: rabbitmq:3-management-alpine
+        ports:
+            - 5672:5672
+            - 15672:15672
+        volumes:
+            - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+            - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
